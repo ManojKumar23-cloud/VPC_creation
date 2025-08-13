@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Demo Lab 01 - Infrastructure setup using CloudFormation
+
+Parameters:
+  KeyName:
+    Description: The name of the EC2 Key Pair to allow SSH access
+    Type: String
+
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref WebsiteDemonewPublicSubnet
+      RouteTableId: !Ref RouteTable
+
+  DemoSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP and SSH access
+      VpcId: !Ref DemoVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: demo-vpc-lab-sg
+
+  DemoInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      SubnetId: !Ref WebsiteDemonewPublicSubnet
+      SecurityGroupIds:
+        - !Ref DemoSecurityGroup
+      ImageId: ami-0144277607031eca2 # Replace with your region's Amazon Linux AMI ID
+      Tags:
+        - Key: Name
+          Value: demo-lab-01-instance
+      UserData: 
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd 
+          systemctl start httpd
+          systemctl enable httpd
+          mkdir -p /var/www/html  # Ensure the directory exists
+          echo "<h1>Welcome to demo-lab-01 Website</h1>" > /var/www/html/index.html
+          systemctl restart httpd  # Restart httpd to apply changes
+
+Outputs:
+  WebsiteURL:
+    Value: !Sub http://${EC2Instance.PublicDnsName}
+    Description: URL of the demo-lab-01 website.
