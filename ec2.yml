@@ -2,9 +2,59 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Demo Lab 01 - Infrastructure setup using CloudFormation
 
 Parameters:
-  KeyName: 	vpc-creation-neofilm
+  KeyName: vpc-creation-neofilm
     Description: The name of the EC2 Key Pair to allow SSH access
-    Type: String
+    Type: AWS::EC2::KeyPair::KeyName
+
+Resources:
+  DemoVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: demo-vpc-lab
+
+  WebsiteDemonewPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref DemoVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: demo-public-subnet
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: demo-igw
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref DemoVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref DemoVPC
+      Tags:
+        - Key: Name
+          Value: demo-public-rt
+
+  Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
 
   SubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -15,7 +65,7 @@ Parameters:
   DemoSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow HTTP and SSH access
+      GroupDescription: Allow HTTP, HTTPS, and SSH access
       VpcId: !Ref DemoVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -42,22 +92,22 @@ Parameters:
       SubnetId: !Ref WebsiteDemonewPublicSubnet
       SecurityGroupIds:
         - !Ref DemoSecurityGroup
-      ImageId: ami-0de716d6197524dd9 # Replace with your region's Amazon Linux AMI ID
+      ImageId: ami-0de716d6197524dd9 # Replace with valid Amazon Linux AMI ID for your region
       Tags:
         - Key: Name
           Value: demo-lab-01-instance
-      UserData: 
+      UserData:
         Fn::Base64: |
           #!/bin/bash
           yum update -y
-          yum install -y httpd 
+          yum install -y httpd
           systemctl start httpd
           systemctl enable httpd
-          mkdir -p /var/www/html  # Ensure the directory exists
+          mkdir -p /var/www/html
           echo "<h1>Welcome to demo-lab-01 Website</h1>" > /var/www/html/index.html
-          systemctl restart httpd  # Restart httpd to apply changes
+          systemctl restart httpd
 
 Outputs:
   WebsiteURL:
-    Value: !Sub http://${EC2Instance.PublicDnsName}
-    Description: URL of the demo-lab-01 website.
+    Description: URL of the demo-lab-01 website
+    Value: !Sub "http://${DemoInstance.PublicDnsName}"
