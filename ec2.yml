@@ -73,20 +73,4 @@ Resources:
       SubnetId: !Ref PublicSubnet1
       Tags:
         - Key: Name
-          Value: demo-lab-01
-      UserData: 
-        Fn::Base64: |
-          #!/bin/bash
-          yum update -y
-          yum install -y httpd 
-          systemctl start httpd
-          systemctl enable httpd
-          mkdir -p /var/www/html  # Ensure the directory exists
-          echo "<h1>Welcome to demo-lab-01 Website</h1>" > /var/www/html/index.html
-          systemctl restart httpd  # Restart httpd to apply changes
-
-Outputs:
-  WebsiteURL:
-    Value: !Sub http://${EC2Instance.PublicDnsName}
-    Description: URL of the demo-lab-01 website.
-
+          Value: DemoInstance
