@@ -39,7 +39,20 @@ Resources:
       Tags:
         - Key: Name
           Value: WebsiteDemonewPrivateSubnet
-  
+
+   # Private Subnet 
+  MyPrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.9.0/24
+      AvailabilityZone: !Select
+        - 0
+        - !GetAZs ''
+      Tags:
+        - Key: Name
+          Value: WebsiteDemonewPrivateSubnet-02
+          
   # Internet Gateway
   MyInternetGateway:
     Type: AWS::EC2::InternetGateway
