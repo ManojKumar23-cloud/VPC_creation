@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Demo Lab 01 - Infrastructure setup using CloudFormation
 
 Parameters:
-  KeyName: infra-keypair-chipware
+  KeyName: 	vpc-creation-neofilm
     Description: The name of the EC2 Key Pair to allow SSH access
     Type: String
 
@@ -42,7 +42,7 @@ Parameters:
       SubnetId: !Ref WebsiteDemonewPublicSubnet
       SecurityGroupIds:
         - !Ref DemoSecurityGroup
-      ImageId: ami-0144277607031eca2 # Replace with your region's Amazon Linux AMI ID
+      ImageId: ami-0de716d6197524dd9 # Replace with your region's Amazon Linux AMI ID
       Tags:
         - Key: Name
           Value: demo-lab-01-instance
